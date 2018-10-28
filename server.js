@@ -16,8 +16,8 @@ app.listen(8000);
 /***** Websocket Server */
 wss.on('connection', function connection(ws, req) {
     ws.on('message', function incoming(message) {
-        console.log('received: %s', message);
-        const request = JSON.parse(message);
+        console.log('received: %s', data);
+        const request = JSON.parse(data.message);
         requestTypes[request.type](request, ws);
     });
 });
@@ -34,6 +34,10 @@ class Player {
     }
     dealCards(newCards) {
         this.cards.push(...newCards);
+        this.ws.send(JSON.stringify({
+            type: "yourCards",
+            message: this.cards
+        }))
     }
     win() {
         this.points++;
@@ -56,7 +60,7 @@ class Player {
     playerTests() {
         this.cards = ["sample", "bottom text"]
         const lv = this.cards.length;
-        this.dealCards([{ id: 4, text: "meme" }, { id: 5, text: "Kartentext" }]);
+        //this.dealCards([{ id: 4, text: "meme" }, { id: 5, text: "Kartentext" }]);
         if (this.cards.length === (lv + 2)) console.log("DealCards successs");
         if (this.hasCard("sample") && !this.hasCard("nicht enthalten")) console.log("HasCard success");
         if (this.playCard("sample") && this.cards[0] !== "sample") console.log("Playcard success");
@@ -71,28 +75,39 @@ class GameRoom {
         this.rounds = {};
         this.counter = 0;
         this.acceptPlays = false;
+        this.running = false;
     }
     get password() {
         return this.pw;
     }
     join(uuid, ws, name) {
-        if (typeof name !== "string") return { type: "error", msg: "no name" };
-        if (ws === undefined) return { type: "error", msg: "ws error" };
+        if (typeof name !== "string") return { type: "error", message: "no name" };
+        if (ws === undefined) return { type: "error", message: "ws error" };
         while (this.players.some((player) => {
             return player.name === name;
         })) {
             name = `${name} ist dumm`;
         }
         this.players.push(new Player(uuid, ws, name, 0));
+        const frontendPlayers = this.players.map(player => {
+            return { name: player.name, points: player.points }
+        })
+        this.players.forEach(player => {
+            player.ws.send(JSON.stringify({
+                type: "allplayers",
+                message: frontendPlayers
+            }))
+        })
     }
     leave(uuid) {
         players = players.filter((player) => {
             return player.uuid !== uuid;
         })
     }
-    playRound() {
+    startRound() {
+        if (running) return
         // Verteile Karten an spieler
-        const amountOfCards = count === 0 ? 8 : 1;
+        const amountOfCards = couplayRoundnt === 0 ? 8 : 1;
         this.players.forEach(player => {
             for (let i = 0; i <= amountOfCards; i++) {
                 player.dealCards(whiteCards[Math.round(Math.random() * whiteCards.length)]);
@@ -100,11 +115,10 @@ class GameRoom {
         });
         // Speichere die Lösungen mit UUID in rounds
         this.acceptPlays = true;
-        const roundID = this.id + this.counter;
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
                 type: "roundStart",
-                message: roundID
+                message: this.counter
             }))
         })
         // Alle voten...
@@ -114,8 +128,12 @@ class GameRoom {
         //Nächste runde, wenn counter
     }
     collectResults(uuid, roundID, text) {
-        if (this.acceptPlays)
+        if (this.acceptPlays) {
             this.rounds[roundID][uuid] = text;
+        }
+        this.players.every(player => {
+            return this.rounds[this.counter][player.uuid] !== undefined
+        })
     }
     getPlayer(uuid) {
         return this.players.find((player) => {
@@ -127,8 +145,7 @@ class GameRoom {
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
                 type: 'chat',
-                from: name,
-                message: message
+                message: { from: name, message: message }
             }));
         })
     }
@@ -149,14 +166,17 @@ function findRoom(roomID, password) {
         });
     }
 }
+function error(ws, message) {
+    ws.send(JSON.stringify({
+        type: "error",
+        message: message
+    }))
+}
 const requestTypes = {
     newRoom: function (req, ws) {
         const { room, pw, name, uuid } = req;
         if (findRoom(room, false) !== undefined) {
-            ws.send(JSON.stringify({
-                type: "error",
-                message: "Roomname Already exists"
-            }))
+            error(ws, "Roomname Already exists");
             return;
         }
         const gRoom = new GameRoom(room, pw);
@@ -165,15 +185,9 @@ const requestTypes = {
     },
     joinRoom: function (req, ws) {
         const { room, pw, name, uuid } = req;
-        foundRoom = allRooms.find((thisRoom) => {
-            return thisRoom.id === room && thisRoom.password === pw;
-        });
+        foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
-            console.log("Invalid Room ID");
-            ws.send(JSON.stringify({
-                type: "error",
-                message: "No Room found, or Password Incorrect"
-            }));
+            error(ws, "No Room found, or Password Incorrect");
         }
         else {
             foundRoom.join(uuid, ws, name);
@@ -181,16 +195,34 @@ const requestTypes = {
     },
     chat: function (req, ws) {
         const { room, pw, message, uuid } = req;
-        foundRoom = allRooms.find((thisRoom) => {
-            return thisRoom.id === room && thisRoom.password === pw;
-        });
-        if (typeof foundRoom == "undefined")
+        foundRoom = findRoom(room, pw);
+        if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
+            error(ws, "Invalid Room ID");
+        }
         else {
             foundRoom.chat(uuid, message);
         }
     },
-    playCards: function (req, ws) {
+    playCard: function (req, ws) {
+        const { room, pw, text, uuid, roundID } = req;
+        foundRoom = findRoom(room, pw);
+        if (typeof foundRoom == "undefined") {
+            console.log("Invalid Room ID");
+            error(ws, "Room doesnt exsit");
+        }
+        else {
+            foundRoom.collectResults(uuid, roundID, text);
+        }
+    },
+    startRound: function (req, ws) {
+        const { room, pw } = req;
+        foundRoom = findRoom(room, pw);
+        if (typeof foundRoom == "undefined") {
+            console.log("Invalid Room ID");
+            error(ws, "Invalid Room ID");
+        } else {
 
+        }
     }
 }

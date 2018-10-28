@@ -9,10 +9,12 @@ const ws = new WebSocket('ws://' + location.hostname + ':8080');
 document.querySelector('div.new button').addEventListener('click', function createRoom() {
     var msg = {
         type: "newRoom",
-        room: document.querySelector('div.new input[name="RName"]').value,
-        pw: document.querySelector('div.new input[name="RPass"]').value,
-        name: document.querySelector('div.new input[name="Name"]').value,
-        uuid: myUUID
+        message: {
+            room: document.querySelector('div.new input[name="RName"]').value,
+            pw: document.querySelector('div.new input[name="RPass"]').value,
+            name: document.querySelector('div.new input[name="Name"]').value,
+            uuid: myUUID
+        }
     }
     console.log(msg);
     ws.send(JSON.stringify(msg));
@@ -21,10 +23,12 @@ document.querySelector('div.new button').addEventListener('click', function crea
 document.querySelector('div.join button').addEventListener('click', function createRoom() {
     var msg = {
         type: "joinRoom",
-        room: document.querySelector('div.new input[name="RName"]').value,
-        pw: document.querySelector('div.new input[name="RPass"]').value,
-        name: document.querySelector('div.new input[name="Name"]').value,
-        uuid: myUUID
+        message: {
+            room: document.querySelector('div.new input[name="RName"]').value,
+            pw: document.querySelector('div.new input[name="RPass"]').value,
+            name: document.querySelector('div.new input[name="Name"]').value,
+            uuid: myUUID
+        }
     }
     console.log(msg);
     ws.send(JSON.stringify(msg));
@@ -33,10 +37,12 @@ document.querySelector('div.join button').addEventListener('click', function cre
 document.querySelector('div.chat button').addEventListener('click', function createRoom() {
     var msg = {
         type: "chat",
-        room: document.querySelector('div.chat input[name="RName"]').value,
-        pw: document.querySelector('div.chat input[name="RPass"]').value,
-        message: document.querySelector('div.chat input[name="Input"]').value,
-        uuid: myUUID
+        message: {
+            room: document.querySelector('div.chat input[name="RName"]').value,
+            pw: document.querySelector('div.chat input[name="RPass"]').value,
+            message: document.querySelector('div.chat input[name="Input"]').value,
+            uuid: myUUID
+        }
     }
     console.log(msg);
     ws.send(JSON.stringify(msg));
