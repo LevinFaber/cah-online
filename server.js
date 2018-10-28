@@ -39,8 +39,8 @@ class Player {
             message: this.cards
         }))
     }
-    win() {
-        this.points++;
+    getPoints(points) {
+        this.points = this.points + points;
     }
     hasCard(text) {
         return this.cards.some((card) => {
@@ -73,6 +73,7 @@ class GameRoom {
         this.rounds = [];
         this.currentRound = 0;
         this.acceptPlays = false;
+        this.acceptVotes = false;
         this.running = false;
     }
     get password() {
@@ -81,9 +82,8 @@ class GameRoom {
     join(uuid, ws, name) {
         this.players.push(new Player(uuid, ws, name, 0));
         const frontendPlayers = this.players.map(player => {
-
             return { name: player.name, points: player.points, uuid: player.uuid }
-        })
+        });
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
                 type: "allPlayers",
@@ -97,7 +97,6 @@ class GameRoom {
         })
     }
     startRound() {
-        if (this.running) return
         this.running = true;
         // Verteile Karten an spieler
 
@@ -130,14 +129,16 @@ class GameRoom {
     collectResults(uuid, roundNr, text) {
         if (this.acceptPlays && this.currentRound == roundNr) {
             console.info(`Got ${text} from ${uuid}`);
-            this.rounds[this.currentRound][uuid] = text;
+            this.rounds[this.currentRound][uuid] = {};
+            this.rounds[this.currentRound][uuid].answer = text;
         }
-        if (this.allPlayed(roundNr)) {
-            console.log("Everybody played, ", this.rounds)
-            this.voting();
+        if (this.allPlayed()) {
+            console.log("Everybody played, ", this.rounds);
+            this.acceptPlays = false;
+            this.startVote();
         }
     }
-    voting() {
+    startVote() {
         const round = this.rounds[this.currentRound];
         const data = JSON.stringify({
             type: "allAnswers",
@@ -146,6 +147,36 @@ class GameRoom {
         this.players.forEach(player => {
             player.ws.send(data);
         })
+        this.acceptVotes = true;
+    }
+    collectVote(vote, uuid) {
+        if (!this.acceptVotes) return;
+        this.rounds[this.currentRound][uuid].vote = vote;
+
+        if (this.allVoted()) {
+            console.log("Everybody voted, ", this.rounds);
+            this.acceptVotes = false;
+            this.endRound();
+        }
+    }
+    endRound() {
+        const round = this.rounds[this.currentRound];
+        Object.keys(round).forEach((key) => {
+            if (key !== "blackCard") {
+                for (let i = 0; i < round[key].vote.length; i++) {
+                    const player = this.getPlayer(round[key].vote[i]);
+                    player.getPoints(round[key].vote.length - i);
+                }
+            }
+        });
+        const frontendPlayers = this.players.map(player => {
+            return { name: player.name, points: player.points, uuid: player.uuid }
+        });
+        this.players.forEach(player => {
+            player.ws.send(JSON.stringify({ type: "allPlayers", message: frontendPlayers }));
+        })
+        this.currentRound++;
+        this.startRound();
     }
     getPlayer(uuid) {
         return this.players.find((player) => {
@@ -163,7 +194,22 @@ class GameRoom {
     }
     allPlayed() {
         return this.players.every(player => {
-            return this.rounds[this.currentRound][player.uuid] !== undefined
+            if (this.rounds[this.currentRound][player.uuid] === undefined)
+                return false;
+            else if (this.rounds[this.currentRound][player.uuid].answer === undefined)
+                return false;
+            else
+                return true;
+        })
+    }
+    allVoted() {
+        return this.players.every(player => {
+            if (this.rounds[this.currentRound][player.uuid] === undefined)
+                return false;
+            else if (this.rounds[this.currentRound][player.uuid].vote === undefined)
+                return false;
+            else
+                return true;
         })
     }
 }
@@ -247,13 +293,16 @@ const requestTypes = {
         }
     },
     vote: function (req, ws) {
-        const { room, pw, vote } = req;
+        const { room, pw, vote, uuid } = req;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
             error(ws, "Invalid Room ID");
+        } else if (typeof vote.length === "undefined") {
+            console.log("Invalid Vote from", uuid);
+            error(ws, "Invalid Vote");
         } else {
-            foundRoom.vote();
+            foundRoom.collectVote(vote, uuid);
         }
     }
 }

@@ -54,8 +54,9 @@ const handleData = {
         data.forEach(player => {
             if (!players.some(x => x.uuid === player.uuid)) {
                 players.push(player)
-                document.querySelector('div.playerlist').innerHTML += (`<p>${player.name}: ${player.points}</p>`);
+                document.querySelector('div.playerlist').innerHTML += (`<p>${player.name}: <span data-uuid="${player.uuid}">${player.points}</p>`);
             }
+            document.querySelector(`span[data-uuid="${player.uuid}"]`).innerHTML = player.points;
         })
     },
     error: function (data) {
@@ -82,15 +83,16 @@ const handleData = {
         console.info('The players played: ', data);
         Object.keys(data).forEach(key => {
             if (key !== "blackCard") {
-                document.querySelector('div.answers').innerHTML += `<p data-uuid="${key}">${data[key]}</p>`
+                document.querySelector('div.answers').innerHTML += `<p data-uuid="${key}">${data[key].answer}</p>`
             }
         })
         const answers = Object.keys(data).length - 1;
+        console.log(answers);
         let vote = [];
         document.querySelectorAll('div.answers p').forEach(element => {
             element.addEventListener('click', function () {
-                vote = [this.dataset.uuid, ...vote];
-                if (vote.length = answers) send("vote", { vote: vote }):
+                vote = [...vote, this.dataset.uuid];
+                if (vote.length == answers) send("vote", { vote: vote });
             })
         })
     }
