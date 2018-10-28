@@ -1,0 +1,25 @@
+{
+  "name": "cah-online",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LevinFaber/cah-online.git"
+  },
+  "author": "",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/LevinFaber/cah-online/issues"
+  },
+  "homepage": "https://github.com/LevinFaber/cah-online#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "nodemon": "^1.18.5",
+    "ws": "^6.1.0"
+  }
+}
