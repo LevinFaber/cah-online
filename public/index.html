@@ -7,46 +7,77 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>CAH</title>
     <style>
-        div *   {
-            width: 30%;
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .black-card {
+            color: white;
+            background-color: black;
+        }
+        body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        div.orga {
+            grid-column: 1;
+        }
+        div.playerlist {
+            grid-column: 1 2;
+        }
+        .answers p {
+            border: 1px solid red;
         }
     </style>
 </head>
 
 <body>
-    <h3>
-        Youre Name:
-    </h3>
-    <input type="text" name="Name" id="">
-    <h3>
-        Room Name:
-    </h3>
-    <input type="text" name="RName" id="">
-    <h3>
-        Room PW:
-    </h3>
-    <input type="text" name="RPass" id="">
-    <button class="start">Start game</button>
-    <div class="new">
-        <h2>
-            Create New Room:
-        </h2>
-        <button class="create">Create</button>
+    <div class="orga">
+        <h3>
+            Youre Name:
+        </h3>
+        <input type="text" name="Name" id="">
+        <h3>
+            Room Name:
+        </h3>
+        <input type="text" name="RName" id="">
+        <h3>
+            Room PW:
+        </h3>
+        <input type="text" name="RPass" id="">
+        <button class="start">Start game</button>
+        <div class="new">
+            <h2>
+                Create New Room:
+            </h2>
+            <button class="create">Create</button>
+        </div>
+
+        <div class="join">
+            <h2>
+                Join Room:
+            </h2>
+            <button class="join">Join</button>
+        </div>
+
+
+        <div class="chat">
+            <h2>Chat</h2>
+            <input type="text" name="chat" id="">
+            <button class="chat">Chat</button>
+            <div class="hehe"></div>
+        </div>
+    </div>
+    <div class="playerlist">
     </div>
 
-    <div class="join">
-        <h2>
-            Join Room:
-        </h2>
-        <button class="join">Join</button>
-    </div>
 
+    <div class="game-area">
+        <div class="black-card"></div>
+        <div class="your-cards">
 
-    <div class="chat">
-        <h2>Chat</h2>
-        <input type="text" name="Input" id="">
-        <button class="chat">Chat</button>
-        <div class="hehe"></div>
+        </div>
+        <button class="confirm">confirm</button>
+        <div class="answers"></div>
     </div>
     <script src="/index.js"></script>
 </body>

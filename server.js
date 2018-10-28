@@ -70,8 +70,8 @@ class GameRoom {
         this.id = id;
         this.pw = password;
         this.players = [];
-        this.rounds = {};
-        this.counter = 0;
+        this.rounds = [];
+        this.currentRound = 0;
         this.acceptPlays = false;
         this.running = false;
     }
@@ -79,17 +79,10 @@ class GameRoom {
         return this.pw;
     }
     join(uuid, ws, name) {
-        if (typeof name !== "string") return { type: "error", message: "no name" };
-        if (ws === undefined) return { type: "error", message: "ws error" };
-        while (this.players.some((player) => {
-            return player.name === name;
-        })) {
-            name = `${name} ist dumm`;
-        }
         this.players.push(new Player(uuid, ws, name, 0));
         const frontendPlayers = this.players.map(player => {
 
-            return { name: player.name, points: player.points }
+            return { name: player.name, points: player.points, uuid: player.uuid }
         })
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
@@ -105,8 +98,10 @@ class GameRoom {
     }
     startRound() {
         if (this.running) return
+        this.running = true;
         // Verteile Karten an spieler
-        const amountOfCards = this.counter === 0 ? 8 : 1;
+
+        const amountOfCards = this.currentRound === 0 ? 8 : 1;
         this.players.forEach(player => {
             for (let i = 0; i <= amountOfCards; i++) {
                 player.dealCard(whiteCards[Math.round(Math.random() * whiteCards.length)]);
@@ -114,24 +109,42 @@ class GameRoom {
         });
         // Speichere die Lösungen mit UUID in rounds
         this.acceptPlays = true;
+        this.rounds[this.currentRound] = {};
+        this.rounds[this.currentRound].blackCard = blackCards[Math.round(Math.random() * blackCards.length)];
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
                 type: "roundStart",
-                message: this.counter
+                message: {
+                    roundNr: this.currentRound,
+                    blackCard: this.rounds[this.currentRound].blackCard,
+                }
             }))
-        })
+        });
+        console.info("Send Round details, listening for Results.")
         // Alle voten...
 
         // Winner Incrementiern
 
         //Nächste runde, wenn counter
     }
-    collectResults(uuid, roundID, text) {
-        if (this.acceptPlays) {
-            this.rounds[roundID][uuid] = text;
+    collectResults(uuid, roundNr, text) {
+        if (this.acceptPlays && this.currentRound == roundNr) {
+            console.info(`Got ${text} from ${uuid}`);
+            this.rounds[this.currentRound][uuid] = text;
         }
-        this.players.every(player => {
-            return this.rounds[this.counter][player.uuid] !== undefined
+        if (this.allPlayed(roundNr)) {
+            console.log("Everybody played, ", this.rounds)
+            this.voting();
+        }
+    }
+    voting() {
+        const round = this.rounds[this.currentRound];
+        const data = JSON.stringify({
+            type: "allAnswers",
+            message: round
+        })
+        this.players.forEach(player => {
+            player.ws.send(data);
         })
     }
     getPlayer(uuid) {
@@ -146,6 +159,11 @@ class GameRoom {
                 type: 'chat',
                 message: { from: name, message: message }
             }));
+        })
+    }
+    allPlayed() {
+        return this.players.every(player => {
+            return this.rounds[this.currentRound][player.uuid] !== undefined
         })
     }
 }
@@ -184,9 +202,13 @@ const requestTypes = {
     },
     joinRoom: function (req, ws) {
         const { room, pw, name, uuid } = req;
+        if (typeof name !== "string") error(ws, "no name");
+        if (ws === undefined) error(ws, "ws error");
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             error(ws, "No Room found, or Password Incorrect");
+        } else if (foundRoom.players.some(player => player.uuid === uuid)) {
+            error(ws, "You are already Playing");
         }
         else {
             foundRoom.join(uuid, ws, name);
@@ -204,14 +226,14 @@ const requestTypes = {
         }
     },
     playCard: function (req, ws) {
-        const { room, pw, text, uuid, roundID } = req;
+        const { room, pw, text, uuid, roundNr } = req;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
             error(ws, "Room doesnt exsit");
         }
         else {
-            foundRoom.collectResults(uuid, roundID, text);
+            foundRoom.collectResults(uuid, roundNr, text);
         }
     },
     startRound: function (req, ws) {
@@ -222,6 +244,16 @@ const requestTypes = {
             error(ws, "Invalid Room ID");
         } else {
             foundRoom.startRound();
+        }
+    },
+    vote: function (req, ws) {
+        const { room, pw, vote } = req;
+        foundRoom = findRoom(room, pw);
+        if (typeof foundRoom == "undefined") {
+            console.log("Invalid Room ID");
+            error(ws, "Invalid Room ID");
+        } else {
+            foundRoom.vote();
         }
     }
 }

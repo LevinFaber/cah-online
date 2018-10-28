@@ -9,11 +9,13 @@
 - error 
     - message: Error Message
 - allPlayers:
-    - message: All players, Array of {name, points}
+    - message: All players, Array of {name, points, uuid}
 - roundStart: 
-    - message: Round Number
+    - message: { roundNr, blackCard }
 - chat: 
     - message: {from, messsage}
+- allAnswers: 
+    - message: Array of Arrays of Text
 
 ### To Backend
 
@@ -27,3 +29,5 @@
     - message: { room, pw, text, uuid, roundID}
 - startRound: 
     - message: { room, pw }
+- vote: 
+    - message: { room, pw, vote }
