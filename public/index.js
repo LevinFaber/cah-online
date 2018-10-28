@@ -3,16 +3,32 @@ const UUIDGeneratorBrowser = () =>
         (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
     );
 const myUUID = UUIDGeneratorBrowser();
-
 const ws = new WebSocket('ws://' + location.hostname + ':8080');
+const href = location.href;
+let roomID = "";
+if (href.indexOf('#') >= 0) {
+    roomID = href.slice(href.lastIndexOf('/') + 1);
+    document.querySelector('input[name="RName"]').value = roomID;
+}
 
+document.querySelector('button.start').addEventListener('click', function () {
+    var msg = {
+        type: "startRound",
+        message: {
+            room: document.querySelector('input[name="RName"]').value,
+            pw: document.querySelector('input[name="RPass"]').value,
+        }
+    }
+    console.log(msg);
+    ws.send(JSON.stringify(msg));
+})
 document.querySelector('div.new button').addEventListener('click', function createRoom() {
     var msg = {
         type: "newRoom",
         message: {
-            room: document.querySelector('div.new input[name="RName"]').value,
-            pw: document.querySelector('div.new input[name="RPass"]').value,
-            name: document.querySelector('div.new input[name="Name"]').value,
+            room: document.querySelector('input[name="RName"]').value,
+            pw: document.querySelector('input[name="RPass"]').value,
+            name: document.querySelector('input[name="Name"]').value,
             uuid: myUUID
         }
     }
@@ -24,9 +40,9 @@ document.querySelector('div.join button').addEventListener('click', function cre
     var msg = {
         type: "joinRoom",
         message: {
-            room: document.querySelector('div.new input[name="RName"]').value,
-            pw: document.querySelector('div.new input[name="RPass"]').value,
-            name: document.querySelector('div.new input[name="Name"]').value,
+            room: document.querySelector('input[name="RName"]').value,
+            pw: document.querySelector('input[name="RPass"]').value,
+            name: document.querySelector('input[name="Name"]').value,
             uuid: myUUID
         }
     }
@@ -38,8 +54,8 @@ document.querySelector('div.chat button').addEventListener('click', function cre
     var msg = {
         type: "chat",
         message: {
-            room: document.querySelector('div.chat input[name="RName"]').value,
-            pw: document.querySelector('div.chat input[name="RPass"]').value,
+            room: document.querySelector('input[name="RName"]').value,
+            pw: document.querySelector('input[name="RPass"]').value,
             message: document.querySelector('div.chat input[name="Input"]').value,
             uuid: myUUID
         }
@@ -56,6 +72,16 @@ ws.onmessage = function (event) {
 }
 const handleData = {
     chat: function (data) {
-        document.querySelector('div.hehe').innerHTML += (`<p>${data.from}: ${data.message}</p>`)
+        document.querySelector('div.hehe').innerHTML += (`<p>${data.message.from}: ${data.message.message}</p>`)
+    },
+    allPlayers: function (data) {
+        console.table(data.message)
+            ;
+    },
+    error: function (data) {
+        console.error(data.message)
+    },
+    roundStart: function (data) {
+        console.info("Round Started ", data.message)
     }
 }

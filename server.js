@@ -15,10 +15,10 @@ app.listen(8000);
 /***** End Static Server */
 /***** Websocket Server */
 wss.on('connection', function connection(ws, req) {
-    ws.on('message', function incoming(message) {
+    ws.on('message', function incoming(data) {
         console.log('received: %s', data);
-        const request = JSON.parse(data.message);
-        requestTypes[request.type](request, ws);
+        const request = JSON.parse(data);
+        requestTypes[request.type](request.message, ws);
     });
 });
 /***** End Websocket Server */
@@ -32,8 +32,8 @@ class Player {
         this.points = points;
         this.cards = [];
     }
-    dealCards(newCards) {
-        this.cards.push(...newCards);
+    dealCard(newCard) {
+        this.cards.push(newCard);
         this.ws.send(JSON.stringify({
             type: "yourCards",
             message: this.cards
@@ -60,8 +60,6 @@ class Player {
     playerTests() {
         this.cards = ["sample", "bottom text"]
         const lv = this.cards.length;
-        //this.dealCards([{ id: 4, text: "meme" }, { id: 5, text: "Kartentext" }]);
-        if (this.cards.length === (lv + 2)) console.log("DealCards successs");
         if (this.hasCard("sample") && !this.hasCard("nicht enthalten")) console.log("HasCard success");
         if (this.playCard("sample") && this.cards[0] !== "sample") console.log("Playcard success");
 
@@ -90,11 +88,12 @@ class GameRoom {
         }
         this.players.push(new Player(uuid, ws, name, 0));
         const frontendPlayers = this.players.map(player => {
+
             return { name: player.name, points: player.points }
         })
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({
-                type: "allplayers",
+                type: "allPlayers",
                 message: frontendPlayers
             }))
         })
@@ -105,12 +104,12 @@ class GameRoom {
         })
     }
     startRound() {
-        if (running) return
+        if (this.running) return
         // Verteile Karten an spieler
-        const amountOfCards = couplayRoundnt === 0 ? 8 : 1;
+        const amountOfCards = this.counter === 0 ? 8 : 1;
         this.players.forEach(player => {
             for (let i = 0; i <= amountOfCards; i++) {
-                player.dealCards(whiteCards[Math.round(Math.random() * whiteCards.length)]);
+                player.dealCard(whiteCards[Math.round(Math.random() * whiteCards.length)]);
             }
         });
         // Speichere die Lösungen mit UUID in rounds
@@ -222,7 +221,7 @@ const requestTypes = {
             console.log("Invalid Room ID");
             error(ws, "Invalid Room ID");
         } else {
-
+            foundRoom.startRound();
         }
     }
 }
