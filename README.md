@@ -1,5 +1,12 @@
 # cah-online
 
+## ToDo:
+- Frontend (Vue, react etc?)
+- Inputvalidation / cleaning (start game only once)
+- Removing played cards
+- Stop game and declare winner on round limit
+- Pack Selection
+
 ## Websocket Topics
 
 ### To Frontend: 
