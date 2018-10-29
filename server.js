@@ -13,6 +13,7 @@ const wss = new WebSocket.Server({ server: app });
 /***** End Static Server */
 /***** Websocket Server */
 wss.on('connection', function connection(ws, req) {
+    console.log("WS Registration from ", req.connection.remoteAddress)
     ws.on('message', function incoming(data) {
         console.log('received: %s', data);
         const request = JSON.parse(data);
@@ -95,6 +96,7 @@ class GameRoom {
         })
     }
     startRound() {
+        if (this.currentRound !== 0) return;
         this.running = true;
         // Verteile Karten an spieler
 
@@ -173,8 +175,14 @@ class GameRoom {
         this.players.forEach(player => {
             player.ws.send(JSON.stringify({ type: "allPlayers", message: frontendPlayers }));
         })
-        this.currentRound++;
-        this.startRound();
+        if (this.currentRound <= 9) {
+            this.currentRound++;
+            this.startRound();
+        } else {
+            // Clear State
+            this.running = false;
+            this.rounds = {};
+        }
     }
     getPlayer(uuid) {
         return this.players.find((player) => {
