@@ -3,7 +3,7 @@ const UUIDGeneratorBrowser = () =>
         (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
     );
 const myUUID = UUIDGeneratorBrowser();
-const ws = new WebSocket('ws://' + location.hostname + ':8080');
+const ws = new WebSocket(`ws://${location.hostname}:${location.port}`);
 const href = location.href;
 let roomID = "";
 if (href.indexOf('#') >= 0) {

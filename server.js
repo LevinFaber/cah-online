@@ -2,19 +2,14 @@ const express = require('express');
 const WebSocket = require('ws');
 const path = require('path');
 const { blackCards, whiteCards } = require('./cards/cards');
-const app = express();
-const wsPort = 8080;
-const sPort = process.env.ENV === "PROD" ? 80 : 8000;
-const wss = new WebSocket.Server({ port: wsPort });
+const app = express()
+    .use(express.static('public'))
+    .get('/app', (req, res) => {
+        res.sendFile(path.join(__dirname, './public/index.html'));
+    })
+    .listen(process.env.PORT || 8000);
+const wss = new WebSocket.Server({ server: app });
 
-/***** Static Server */
-app.get('/app', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
-})
-
-app.use(express.static('public'));
-app.listen(sPort);
-console.log("Listening on sPort:", sPort)
 /***** End Static Server */
 /***** Websocket Server */
 wss.on('connection', function connection(ws, req) {
