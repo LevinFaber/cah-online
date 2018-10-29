@@ -1,15 +1,13 @@
-const express = require('express');
-const WebSocket = require('ws');
-const path = require('path');
-const GameRoom = require('./classes/gameroom');
-// TODO: Socket.io?
-
+import express from "express";
+import WebSocket from "ws";
+import path from "path";
+import { GameRoom } from "./classes/gameroom"
 const app = express()
     .use(express.static('public'))
     .get('/app', (req, res) => {
         res.sendFile(path.join(__dirname, './public/index.html'));
     })
-    .listen(process.env.PORT || 8000, () => console.log('Server Listening'));
+    .listen(process.env.PORT || 8000);
 const wss = new WebSocket.Server({ server: app });
 
 wss.on('connection', function connection(ws, req) {
