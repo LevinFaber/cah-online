@@ -58,14 +58,14 @@ const requestTypes = {
         }
     },
     playCard: function (req, ws) {
-        const { room, pw, text, uuid, roundNr } = req;
+        const { room, pw, textArray, uuid, roundNr } = req;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
             error(ws, "Room doesnt exsit");
         }
         else {
-            foundRoom.collectResults(uuid, roundNr, text);
+            foundRoom.collectResults(uuid, roundNr, textArray);
         }
     },
     startRound: function (req, ws) {

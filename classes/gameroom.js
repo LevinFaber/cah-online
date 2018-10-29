@@ -42,16 +42,18 @@ module.exports = class GameRoom {
             return player.uuid !== uuid;
         })
     }
-    startRound() {
-        if (this.currentRound !== 0) return;
+    startRound(next) {
+        if (this.currentRound !== 0 && !next) return;
+        console.log(`Starting round ${this.currentRound}`)
         this.running = true;
         // Verteile Karten an Spieler
-        const amountOfCards = this.currentRound === 0 ? 8 : 1;
+        const amountOfCards = this.currentRound === 0 ? 8 : this.rounds[this.currentRound - 1].blackCard.pick;
         this.players.forEach(player => {
-            for (let i = 0; i <= amountOfCards; i++) {
-                player.dealCard(whiteCards[Math.round(Math.random() * whiteCards.length)]);
+            let newCards = []
+            for (let i = 0; i < amountOfCards; i++) {
+                newCards = [...newCards, whiteCards[Math.round(Math.random() * whiteCards.length)]];
             }
-            // TODO: Push Current Cards to user
+            player.dealCards(newCards);
         });
         // Speichere die Lösungen mit UUID in rounds
         this.acceptPlays = true;
@@ -72,14 +74,16 @@ module.exports = class GameRoom {
      * Accepts uuid, roundNr, and text of played card
      * @param {string} uuid 
      * @param {number} roundNr 
-     * @param {string} text 
+     * @param {string} textArray 
      */
-    // TODO: Multiple cards played
-    collectResults(uuid, roundNr, text) {
-        if (this.acceptPlays && this.currentRound == roundNr) {
-            console.info(`Got ${text} from ${uuid}`);
+    collectResults(uuid, roundNr, textArray) {
+        if (!this.acceptPlays) return;
+        if (this.currentRound == roundNr) {
+            console.info(`Got ${textArray} from ${uuid}`);
+            console.log(this.rounds[this.currentRound].blackCard.pick);
+            textArray = textArray.slice(0, this.rounds[this.currentRound].blackCard.pick);
             this.rounds[this.currentRound][uuid] = {};
-            this.rounds[this.currentRound][uuid].answer = text;
+            this.rounds[this.currentRound][uuid].answer = this.getPlayer(uuid).playCards(textArray);
         }
         if (this.allPlayed()) {
             // TODO: Remove the Played Cards
@@ -92,6 +96,7 @@ module.exports = class GameRoom {
      * Initiates voting process
      */
     startVote() {
+        console.log("start vote")
         const round = this.rounds[this.currentRound];
         const data = JSON.stringify({
             type: "allAnswers",
@@ -138,9 +143,10 @@ module.exports = class GameRoom {
         })
         if (this.currentRound <= 9) {
             this.currentRound++;
-            this.startRound();
+            this.startRound(true);
         } else {
             // Clear State
+            // TODO Declare winner
             this.running = false;
             this.rounds = {};
         }

@@ -17,8 +17,9 @@ module.exports = class Player {
      * Adds an array of cards to the players current Hand
      * @param {Array} newCard 
      */
-    dealCard(newCard) {
-        this.cards.push(newCard);
+
+    dealCards(newCards) {
+        this.cards = [...this.cards, ...newCards];
         this.ws.send(JSON.stringify({
             type: "yourCards",
             message: this.cards
@@ -42,16 +43,16 @@ module.exports = class Player {
     }
     /**
      * Remove card from players hand, return true if he has this card, false if he doesnt
-     * @param {string} text 
+     * @param {string} textArray 
      */
-    playCard(text) {
-        if (this.hasCard(text)) {
+    playCards(textArray) {
+        if (textArray.every(card => this.hasCard(card))) {
             this.cards = this.cards.filter((card) => {
-                return card !== text;
+                return !textArray.some(cardR => card === cardR);
             })
-            return true;
+            return textArray;
         } else {
-            return false;
+            return ["false"];
         }
     }
     playerTests() {

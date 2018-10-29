@@ -25,14 +25,18 @@ function send(topic, data) {
     ws.send(JSON.stringify(payload));
 }
 document.querySelector('button.start').addEventListener('click', () => send("startRound"));
+
 document.querySelector('div.new button').addEventListener('click', () => send("newRoom", { name: document.querySelector("input[name=Name]").value }));
+
 document.querySelector('div.join button').addEventListener('click', () => send("joinRoom", { name: document.querySelector("input[name=Name]").value }));
+
 document.querySelector('div.chat button').addEventListener('click', () => send("chat", { message: document.querySelector("input[name=chat]").value }));
+
 document.querySelector("button.confirm").addEventListener('click', () => {
-    const value = document.querySelector("input[type=checkbox]:checked").name;
+    const value = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(item => item.name);
     send("playCard", {
         roundNr: roundNr,
-        text: value
+        textArray: value
     })
 })
 
@@ -43,7 +47,6 @@ ws.onmessage = function (event) {
     handleData[data.type](data.message);
 }
 const players = [];
-const cards = [];
 let roundNr = 0;
 const handleData = {
     chat: function (data) {
@@ -69,14 +72,12 @@ const handleData = {
     },
     yourCards: function (data) {
         console.info('Your cards are: ', data);
+        document.querySelector('div.your-cards').innerHTML = "";
         data.forEach(card => {
-            if (!cards.some(x => x === card)) {
-                cards.push(card)
-                document.querySelector('div.your-cards').innerHTML += (`
+            document.querySelector('div.your-cards').innerHTML += (`
                 <input type="checkbox" name="${card}">
                 <label for="${card}">${card}</label>
                 `);
-            }
         })
     },
     allAnswers: function (data) {
