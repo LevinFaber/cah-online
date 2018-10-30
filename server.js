@@ -1,97 +1,95 @@
 const express = require('express');
-const WebSocket = require('ws');
+const http = require('http');
+//const WebSocket = require('ws');
 const path = require('path');
+const socket = require ('socket.io');
 const GameRoom = require('./classes/gameroom');
-// TODO: Socket.io?
 
 const app = express()
     .use(express.static('public'))
     .get('/app', (req, res) => {
         res.sendFile(path.join(__dirname, './public/index.html'));
     })
-    .listen(process.env.PORT || 8000, () => console.log('Server Listening'));
-const wss = new WebSocket.Server({ server: app });
 
-wss.on('connection', function connection(ws, req) {
-    console.log("WS Registration from ", req.connection.remoteAddress)
-    ws.on('message', function incoming(data) {
-        console.log('received: %s', data);
-        const request = JSON.parse(data);
-        requestTypes[request.type](request.message, ws);
-    });
-});
-const allRooms = [];
-const requestTypes = {
-    newRoom: function (req, ws) {
-        const { room, pw, name, uuid } = req;
+const server = http.Server(app);
+const io = socket(server);
+io.on('connection', function(socket) {
+    function error(message) {
+        socket.emit('error-msg', {message})
+    }
+    console.log('A user connected.');
+    socket.on('newRoom', function (data) {
+        console.log(data);
+        const { room, pw, name, uuid } = data;
         if (findRoom(room, false) !== undefined) {
-            error(ws, "Roomname Already exists");
+            error("Roomname Already exists");
             return;
         }
-        const gRoom = new GameRoom(room, pw);
-        gRoom.join(uuid, ws, name);
+        const gRoom = new GameRoom(room, pw, io);
+        gRoom.join(uuid, socket, name);
         allRooms.push(gRoom);
-    },
-    joinRoom: function (req, ws) {
-        const { room, pw, name, uuid } = req;
-        if (typeof name !== "string") error(ws, "no name");
-        if (ws === undefined) error(ws, "ws error");
+    });
+    socket.on('joinRoom', function (data) {
+        const { room, pw, name, uuid } = data;
+        if (typeof name !== "string") error("no name");
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
-            error(ws, "No Room found, or Password Incorrect");
+            error("No Room found, or Password Incorrect");
         } else if (foundRoom.players.some(player => player.uuid === uuid)) {
-            error(ws, "You are already Playing");
+            error("You are already Playing");
         }
         else {
-            foundRoom.join(uuid, ws, name);
+            foundRoom.join(uuid, socket, name);
         }
-    },
-    chat: function (req, ws) {
-        const { room, pw, message, uuid } = req;
+    });
+    socket.on('chat', function (data) {
+        const { room, pw, message, uuid } = data;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
-            error(ws, "Invalid Room ID");
+            error("Invalid Room ID");
         }
         else {
             foundRoom.chat(uuid, message);
         }
-    },
-    playCard: function (req, ws) {
-        const { room, pw, textArray, uuid, roundNr } = req;
+    });
+    socket.on('playCard', function (data) {
+        const { room, pw, textArray, uuid, roundNr } = data;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
-            error(ws, "Room doesnt exsit");
+            error("Room doesnt exsit");
         }
         else {
             foundRoom.collectResults(uuid, roundNr, textArray);
         }
-    },
-    startRound: function (req, ws) {
-        const { room, pw } = req;
+    });
+    socket.on('startRound', function (data) {
+        const { room, pw } = data;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
-            error(ws, "Invalid Room ID");
+            error("Invalid Room ID");
         } else {
             foundRoom.startRound();
         }
-    },
-    vote: function (req, ws) {
-        const { room, pw, vote, uuid } = req;
+    });
+    socket.on('vote',  function (data) {
+        const { room, pw, vote, uuid } = data;
         foundRoom = findRoom(room, pw);
         if (typeof foundRoom == "undefined") {
             console.log("Invalid Room ID");
-            error(ws, "Invalid Room ID");
+            error("Invalid Room ID");
         } else if (typeof vote.length === "undefined") {
             console.log("Invalid Vote from", uuid);
-            error(ws, "Invalid Vote");
+            error("Invalid Vote");
         } else {
             foundRoom.collectVote(vote, uuid);
         }
-    }
-}
+    });
+})
+server.listen(process.env.PORT || 8000, () => console.log('Server Listening'));
+const allRooms = [];
 /**
  * Find Room, return Room or Undefined
  * @param {string} roomID 
@@ -107,15 +105,4 @@ function findRoom(roomID, password) {
             return thisRoom.id === roomID && thisRoom.password === password;
         });
     }
-}
-/**
- * Send Error to Client
- * @param {WebSocket} ws 
- * @param {String} message 
- */
-function error(ws, message) {
-    ws.send(JSON.stringify({
-        type: "error",
-        message: message
-    }))
 }
