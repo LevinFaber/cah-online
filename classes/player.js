@@ -6,9 +6,10 @@ module.exports = class Player {
      * @param {string} name 
      * @param {number} points 
      */
-    constructor(uuid, ws, name, points) {
+    constructor(uuid, socket, name, points) {
+        console.log({uuid, socket, name, points})
         this.uuid = uuid;
-        this.ws = ws;
+        this.socket = socket;
         this.name = name;
         this.points = points;
         this.cards = [];
@@ -20,10 +21,7 @@ module.exports = class Player {
 
     dealCards(newCards) {
         this.cards = [...this.cards, ...newCards];
-        this.ws.send(JSON.stringify({
-            type: "yourCards",
-            message: this.cards
-        }))
+        this.socket.emit('yourCards', this.cards);
     }
     /**
      * Adds the points to the player
@@ -54,12 +52,5 @@ module.exports = class Player {
         } else {
             return ["false"];
         }
-    }
-    playerTests() {
-        this.cards = ["sample", "bottom text"]
-        const lv = this.cards.length;
-        if (this.hasCard("sample") && !this.hasCard("nicht enthalten")) console.log("HasCard success");
-        if (this.playCard("sample") && this.cards[0] !== "sample") console.log("Playcard success");
-
     }
 }

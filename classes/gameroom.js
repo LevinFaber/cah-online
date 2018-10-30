@@ -2,7 +2,8 @@ const { blackCards, whiteCards } = require('../cards/cards');
 const Player = require('./player');
 
 module.exports = class GameRoom {
-    constructor(id, password) {
+    constructor(id, password, io) {
+        this.io = io;
         this.id = id;
         this.pw = password;
         this.players = [];
@@ -21,17 +22,12 @@ module.exports = class GameRoom {
      * @param {WebSocket} ws 
      * @param {string} name 
      */
-    join(uuid, ws, name) {
-        this.players.push(new Player(uuid, ws, name, 0));
+    join(uuid, socket, name) {
+        this.players.push(new Player(uuid, socket, name, 0));
         const frontendPlayers = this.players.map(player => {
             return { name: player.name, points: player.points, uuid: player.uuid }
         });
-        this.players.forEach(player => {
-            player.ws.send(JSON.stringify({
-                type: "allPlayers",
-                message: frontendPlayers
-            }))
-        })
+        socket.join(this.id).emit('allPlayers', [...frontendPlayers]);
     }
     /**
      * Remove player with uuid from players
@@ -40,7 +36,11 @@ module.exports = class GameRoom {
     leave(uuid) {
         players = players.filter((player) => {
             return player.uuid !== uuid;
-        })
+        });
+        const frontendPlayers = this.players.map(player => {
+            return { name: player.name, points: player.points, uuid: player.uuid }
+        });
+        socket.to(this.id).emit('allPlayers', [...frontendPlayers])
     }
     startRound(next) {
         if (this.currentRound !== 0 && !next) return;
@@ -59,14 +59,9 @@ module.exports = class GameRoom {
         this.acceptPlays = true;
         this.rounds[this.currentRound] = {};
         this.rounds[this.currentRound].blackCard = blackCards[Math.round(Math.random() * blackCards.length)];
-        this.players.forEach(player => {
-            player.ws.send(JSON.stringify({
-                type: "roundStart",
-                message: {
-                    roundNr: this.currentRound,
-                    blackCard: this.rounds[this.currentRound].blackCard,
-                }
-            }))
+        this.io.to(this.id).emit('roundStart', {
+            roundNr: this.currentRound,
+            blackCard: this.rounds[this.currentRound].blackCard,
         });
         console.info("Send Round details, listening for Results.")
     }
@@ -86,7 +81,6 @@ module.exports = class GameRoom {
             this.rounds[this.currentRound][uuid].answer = this.getPlayer(uuid).playCards(textArray);
         }
         if (this.allPlayed()) {
-            // TODO: Remove the Played Cards
             console.log("Everybody played, ", this.rounds);
             this.acceptPlays = false;
             this.startVote();
@@ -98,13 +92,7 @@ module.exports = class GameRoom {
     startVote() {
         console.log("start vote")
         const round = this.rounds[this.currentRound];
-        const data = JSON.stringify({
-            type: "allAnswers",
-            message: round
-        })
-        this.players.forEach(player => {
-            player.ws.send(data);
-        })
+        this.io.to(this.id).emit('allAnswers', { ...round });
         this.acceptVotes = true;
     }
     /**
@@ -138,9 +126,7 @@ module.exports = class GameRoom {
         const frontendPlayers = this.players.map(player => {
             return { name: player.name, points: player.points, uuid: player.uuid }
         });
-        this.players.forEach(player => {
-            player.ws.send(JSON.stringify({ type: "allPlayers", message: frontendPlayers }));
-        })
+        this.io.to(this.id).emit('allPlayers', [...frontendPlayers ]);
         if (this.currentRound <= 9) {
             this.currentRound++;
             this.startRound(true);
@@ -167,12 +153,7 @@ module.exports = class GameRoom {
      */
     chat(uuid, message) {
         const { name } = this.getPlayer(uuid);
-        this.players.forEach(player => {
-            player.ws.send(JSON.stringify({
-                type: 'chat',
-                message: { from: name, message: message }
-            }));
-        })
+        this.io.to(this.id).emit('chat', { from: name, message: message });
     }
     allPlayed() {
         return this.players.every(player => {
