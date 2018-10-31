@@ -42,8 +42,8 @@ module.exports = class GameRoom {
         });
         socket.to(this.id).emit('allPlayers', [...frontendPlayers])
     }
-    startRound(next) {
-        if (this.currentRound !== 0 && !next) return;
+    startRound(isNext) {
+        if (this.currentRound !== 0 && !isNext) return;
         console.log(`Starting round ${this.currentRound}`)
         this.running = true;
         // Verteile Karten an Spieler
