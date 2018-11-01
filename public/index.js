@@ -23,13 +23,13 @@ function send(topic, data) {
     }
     console.log(`%c --> sending`, "color: green; font-weight: bold");
     console.log(payload);
-    socket.emit(topic, payload);
+    this.socket.emit(topic, payload);
 }
-socket.on('error-msg', (data) => console.error(data));
-socket.on('chat', function(data) {
+this.socket.on('error-msg', (data) => console.error(data));
+this.socket.on('chat', function(data) {
     document.querySelector('div.hehe').innerHTML += (`<p>${data.from}: ${data.message}</p>`);
 });
-socket.on('allPlayers', function (data) {
+this.socket.on('allPlayers', function (data) {
     console.table(data);
     data.forEach(player => {
         if (!players.some(x => x.uuid === player.uuid)) {
@@ -39,12 +39,12 @@ socket.on('allPlayers', function (data) {
         document.querySelector(`span[data-uuid="${player.uuid}"]`).innerHTML = player.points;
     })
 });
-socket.on('roundStart', function (data) {
+this.socket.on('roundStart', function (data) {
     console.info("Round Started ", data);
     roundNr = data.roundNr;
     document.querySelector('div.black-card').innerHTML += (`<p>${data.blackCard.text}</p>`);
 });
-socket.on('yourCards',  function (data) {
+this.socket.on('yourCards',  function (data) {
     console.info('Your cards are: ', data);
     document.querySelector('div.your-cards').innerHTML = "";
     data.forEach(card => {
@@ -54,7 +54,7 @@ socket.on('yourCards',  function (data) {
             `);
     })
 });
-socket.on('allAnswers', function (data) {
+this.socket.on('allAnswers', function (data) {
     console.info('The players played: ', data);
     Object.keys(data).forEach(key => {
         if (key !== "blackCard") {
