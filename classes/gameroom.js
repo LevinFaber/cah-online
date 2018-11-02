@@ -27,6 +27,7 @@ module.exports = class GameRoom {
     const frontendPlayers = this.players.map((player) => {
       return { name: player.name, points: player.points, uuid: player.uuid };
     });
+    console.log(frontendPlayers);
     socket.join(this.id).emit('allPlayers', [...frontendPlayers]);
   }
   /**

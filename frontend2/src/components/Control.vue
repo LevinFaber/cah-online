@@ -60,12 +60,10 @@ export default {
       })
     },
     join() {
-      console.log(`Joining as ${this.$data.userName}`)
       this.emit('joinRoom', {name: this.$data.userName})
     },
     create() {
-      console.log(`Creating Room ${this.$data.roomName}:${this.$data.roomPw}`)
-      this.emit('newRoom')
+      this.emit('newRoom', { name: this.$data.userName});
     }
   },
   sockets: {

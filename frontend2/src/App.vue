@@ -12,11 +12,9 @@
       >
         <v-flex xs12>
           <v-card>
-            <control v:bind:uuid="uuid" v-if="!isConnected"></control>
+            <control v-bind:uuid="uuid" v-show="!isConnected"></control>
           </v-card> 
-          <v-card>
-            <game v-if="isConnected"></game>
-          </v-card>
+            <game v-show="isConnected" :game="{userName: userName, roomName: roomName, roomPw: roomPw}"></game>
         </v-flex>
       </v-layout>
     </v-content>
@@ -40,14 +38,11 @@ export default {
       userName: '',
       roomName: '',
       roomPw: '',
+      uuid: this.generateUUID()
     }
   },
-  computed: {
-    uuid: () => {
-      ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-          (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
-      )
-    }
+  methods: {
+    generateUUID: () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16))
   },
   sockets: {
     connect() {
@@ -60,8 +55,10 @@ export default {
       console.log(`Chat from ${data.from}: "${data.message}"`)
     },
     confirmJoin(data) {
-      console.log(`Confirm Join.`);
       this.$data.isConnected = true;
+      this.$data.roomName = data.roomName;
+      this.$data.roomPw = data.roomPw;
+      this.$data.userName = data.userName;
     }
   }
 }
