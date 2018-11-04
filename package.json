@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "forever server.js",
+    "build": "cd frontend2 && npm run build",
+    "start": "npm run build && forever server.js ",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

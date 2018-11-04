@@ -6,9 +6,9 @@ const socket = require('socket.io');
 const GameRoom = require('./classes/gameroom');
 
 const app = express()
-  .use(express.static('public'))
-  .get('/app', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
+  .use(express.static('./frontend2/dist'))
+  .get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './frontend2/dist/index.html'));
   });
 
 const server = http.Server(app);
