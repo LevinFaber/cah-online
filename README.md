@@ -1,9 +1,7 @@
 # cah-online
 
 ## ToDo:
-- :iphone: Frontend :construction:
 - :lock: Input validation / input cleaning
-- :trophy: Declare Winner, Winner Screen
 - :bookmark: Card-deck Selection
 
 ## Websocket Topics
