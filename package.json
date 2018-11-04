@@ -4,10 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "installAll": "npm install && npm --prefix ./frontend2 install ./frontend2",
-    "build": "cd frontend2 && npm run build",
-    "start": "forever server.js ",
-    "deploy": "npm run installAll && npm run build && npm run start",
+    "start": "forever server.js",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
