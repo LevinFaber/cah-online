@@ -127,7 +127,6 @@ module.exports = class GameRoom {
   collectVote(vote, uuid) {
     if (!this.acceptVotes) return;
     this.rounds[this.currentRound][uuid].vote = vote;
-
     if (this.allVoted()) {
       console.log('Everybody voted, ', this.rounds);
       this.acceptVotes = false;
