@@ -14,7 +14,7 @@
           <v-card>
             <control v-bind:uuid="uuid" v-show="!isConnected"></control>
           </v-card> 
-            <game v-show="isConnected" :game="{userName: userName, roomName: roomName, roomPw: roomPw}"></game>
+            <game v-show="isConnected" :game="{userName: userName, roomName: roomName, roomPw: roomPw, uuid: uuid}"></game>
         </v-flex>
       </v-layout>
     </v-content>

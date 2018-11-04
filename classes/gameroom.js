@@ -3,6 +3,8 @@ const Player = require('./player');
 
 module.exports = class GameRoom {
   constructor(id, password, io) {
+    this.blackCards = blackCards;
+    this.whiteCards = whiteCards;
     this.io = io;
     this.id = id;
     this.pw = password;
@@ -28,7 +30,8 @@ module.exports = class GameRoom {
       return { name: player.name, points: player.points, uuid: player.uuid };
     });
     console.log(frontendPlayers);
-    socket.join(this.id).emit('allPlayers', [...frontendPlayers]);
+    socket.join(this.id);
+    this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
   }
   /**
    * Remove player with uuid from players
@@ -55,9 +58,13 @@ module.exports = class GameRoom {
     this.players.forEach((player) => {
       let newCards = [];
       for (let i = 0; i < amountOfCards; i++) {
-        newCards = [
-          ...newCards,
-          whiteCards[Math.round(Math.random() * whiteCards.length)]
+        const whiteCardIndex = Math.round(
+          Math.random() * this.whiteCards.length
+        );
+        newCards = [...newCards, this.whiteCards[whiteCardIndex]];
+        this.whiteCards = [
+          ...this.whiteCards.slice(0, whiteCardIndex),
+          ...this.whiteCards.slice(whiteCardIndex + 1)
         ];
       }
       player.dealCards(newCards);
@@ -65,8 +72,12 @@ module.exports = class GameRoom {
     // Speichere die Lösungen mit UUID in rounds
     this.acceptPlays = true;
     this.rounds[this.currentRound] = {};
-    this.rounds[this.currentRound].blackCard =
-      blackCards[Math.round(Math.random() * blackCards.length)];
+    const blackCardIndex = Math.round(Math.random() * this.blackCards.length);
+    this.rounds[this.currentRound].blackCard = this.blackCards[blackCardIndex];
+    this.blackCards = [
+      ...this.blackCards.slice(0, blackCardIndex),
+      ...this.blackCards.slice(blackCardIndex + 1)
+    ];
     this.io.to(this.id).emit('roundStart', {
       roundNr: this.currentRound,
       blackCard: this.rounds[this.currentRound].blackCard
@@ -128,24 +139,39 @@ module.exports = class GameRoom {
    */
   endRound() {
     const round = this.rounds[this.currentRound];
+    let thisRoundsOutcome = {};
     Object.keys(round).forEach((key) => {
       if (key !== 'blackCard') {
         for (let i = 0; i < round[key].vote.length; i++) {
+          console.log(round[key].vote[i]);
           const player = this.getPlayer(round[key].vote[i]);
-          player.getPoints(round[key].vote.length - i);
+          const points = round[key].vote.length - i;
+          player.getPoints(points);
+          if (typeof thisRoundsOutcome[round[key].vote[i]] === 'undefined') {
+            thisRoundsOutcome[round[key].vote[i]] = {};
+            thisRoundsOutcome[round[key].vote[i]].answer =
+              round[round[key].vote[i]].answer;
+            thisRoundsOutcome[round[key].vote[i]].points = points;
+          } else {
+            thisRoundsOutcome[round[key].vote[i]].points =
+              thisRoundsOutcome[round[key].vote[i]].points + points;
+          }
         }
       }
     });
+    console.log({ thisRoundsOutcome });
+    this.io.to(this.id).emit('roundEnd', thisRoundsOutcome);
     const frontendPlayers = this.players.map((player) => {
       return { name: player.name, points: player.points, uuid: player.uuid };
     });
     this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
-    if (this.currentRound <= 9) {
+    if (this.currentRound <= 1) {
       this.currentRound++;
       this.startRound(true);
     } else {
       // Clear State
       // TODO Declare winner
+      this.io.to(this.id).emit('gameEnd', frontendPlayers);
       this.running = false;
       this.rounds = {};
     }

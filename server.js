@@ -71,6 +71,7 @@ io.on('connection', function(socket) {
   });
   socket.on('playCard', function(data) {
     const { room, pw, textArray, uuid, roundNr } = data;
+    console.log('playcard', data);
     foundRoom = findRoom(room, pw);
     if (typeof foundRoom == 'undefined') {
       console.log('Invalid Room ID');
@@ -99,6 +100,7 @@ io.on('connection', function(socket) {
       console.log('Invalid Vote from', uuid);
       error('Invalid Vote');
     } else {
+      console.log(vote);
       foundRoom.collectVote(vote, uuid);
     }
   });

@@ -50,6 +50,11 @@ export default {
       userErrorMsg: '',      
     }
   },
+  created() {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.$data.roomName = urlParams.get('room');
+    this.$data.roomPw= urlParams.get('pw');
+  },
   methods: {
     emit(topic, data) {
       this.$socket.emit(topic, {

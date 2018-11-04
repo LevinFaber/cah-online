@@ -5,7 +5,6 @@
     id="game"
   >
     <v-flex xs8>
-      //TODO Playingfield
       <playingfield :game="game"></playingfield>
     </v-flex>
     <v-flex xs4>
