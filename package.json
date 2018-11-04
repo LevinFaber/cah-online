@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "install": "npm install && cp frontend2 && npm install",
     "build": "cd frontend2 && npm run build",
-    "start": "npm run build && forever server.js ",
+    "start": "forever server.js ",
+    "deploy": "npm install && npm build && npm start",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
