@@ -1,15 +1,14 @@
 # cah-online
 
 ## ToDo:
-- Frontend (Vue, react etc?)
-- Inputvalidation / cleaning
-- Removing played cards
-- Stop game and declare winner on round limit
-- Pack Selection
+- :iphone: Frontend :construction:
+- :lock: Input validation / input cleaning
+- :trophy: Declare Winner, Winner Screen
+- :bookmark: Card-deck Selection
 
 ## Websocket Topics
 
-### To Frontend: 
+### To Frontend: (maybe not current)
 
 - yourCards
     - message: Array of your Cards
