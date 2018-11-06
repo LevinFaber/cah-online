@@ -52,6 +52,8 @@ module.exports = class GameRoom {
     if (this.currentCzar > this.players.length) {
       this.currentCzar = 0;
     }
+    this.frontendPlayers = this.frontendPlayers();
+    this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
     console.log(`Starting round ${this.currentRound}`);
     this.running = true;
     // Verteile Karten an Spieler
