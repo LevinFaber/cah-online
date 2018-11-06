@@ -11,6 +11,7 @@ module.exports = class GameRoom {
     this.players = [];
     this.rounds = [];
     this.currentRound = 0;
+    this.currentCzar = 0;
     this.acceptPlays = false;
     this.acceptVotes = false;
     this.running = false;
@@ -26,10 +27,7 @@ module.exports = class GameRoom {
    */
   join(uuid, socket, name) {
     this.players.push(new Player(uuid, socket, name, 0));
-    const frontendPlayers = this.players.map((player) => {
-      return { name: player.name, points: player.points, uuid: player.uuid };
-    });
-    console.log(frontendPlayers);
+    const frontendPlayers = this.frontendPlayers();
     socket.join(this.id);
     this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
   }
@@ -48,6 +46,12 @@ module.exports = class GameRoom {
   }
   startRound(next) {
     if (this.currentRound !== 0 && !next) return;
+    // Choose Czar
+    this.players[this.currentCzar].isCzar = true;
+    this.currentCzar = this.currentCzar + 1;
+    if (this.currentCzar > this.players.length) {
+      this.currentCzar = 0;
+    }
     console.log(`Starting round ${this.currentRound}`);
     this.running = true;
     // Verteile Karten an Spieler
@@ -160,11 +164,9 @@ module.exports = class GameRoom {
     });
     console.log({ thisRoundsOutcome });
     this.io.to(this.id).emit('roundEnd', thisRoundsOutcome);
-    const frontendPlayers = this.players.map((player) => {
-      return { name: player.name, points: player.points, uuid: player.uuid };
-    });
+    const frontendPlayers = this.frontendPlayers();
     this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
-    if (this.currentRound <= 1) {
+    if (this.currentRound <= 3) {
       this.currentRound++;
       this.startRound(true);
     } else {
@@ -210,5 +212,16 @@ module.exports = class GameRoom {
         return false;
       else return true;
     });
+  }
+  frontendPlayers() {
+    const frontendPlayers = this.players.map((player) => {
+      return {
+        name: player.name,
+        points: player.points,
+        uuid: player.uuid,
+        czar: player.isCzar
+      };
+    });
+    return frontendPlayers;
   }
 };

@@ -7,6 +7,7 @@
     class="elevation-1"
   >
     <template slot="items" slot-scope="props">
+      <td><v-icon v-show="props.item.czar">speaker_notes</v-icon></td>
       <td class="text-xs-right">{{ props.item.name }}</td>
       <td class="text-xs-right">{{ props.item.points }}</td>
     </template>
@@ -15,7 +16,7 @@
 
 <script>
 export default {
-  name: 'Control',
+  name: 'Playerlist',
   props: {
     uuid: String
   },

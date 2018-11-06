@@ -12,12 +12,12 @@ module.exports = class Player {
     this.name = name;
     this.points = points;
     this.cards = [];
+    this.isCzar = false;
   }
   /**
    * Adds an array of cards to the players current Hand
    * @param {Array} newCard
    */
-
   dealCards(newCards) {
     this.cards = [...this.cards, ...newCards];
     this.socket.emit('yourCards', this.cards);
