@@ -1,12 +1,11 @@
 # cah-online
 
-## ToDo:
-- :lock: Input validation / input cleaning
-- :bookmark: Card-deck Selection
+## :construction: ToDo: See Issues
+
+
 
 ## Websocket Topics
-
-### To Frontend: (maybe not current)
+### To Frontend: (not up to date!)
 
 - yourCards
     - message: Array of your Cards
