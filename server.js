@@ -48,8 +48,6 @@ io.on('connection', function(socket) {
     foundRoom = findRoom(room, pw);
     if (typeof foundRoom == 'undefined') {
       errorRoom('No Room found, or Password Incorrect');
-    } else if (foundRoom.players.some((player) => player.uuid === uuid)) {
-      errorUser('You are already Playing');
     } else {
       foundRoom.join(uuid, socket, name);
       socket.emit('confirmJoin', {

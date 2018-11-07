@@ -26,7 +26,14 @@ module.exports = class GameRoom {
    * @param {string} name
    */
   join(uuid, socket, name) {
-    this.players.push(new Player(uuid, socket, name, 0));
+    console.log(uuid)
+    const existingPlayer = this.getPlayer(uuid);
+    console.log(existingPlayer)
+    if (typeof existingPlayer === "undefined") {
+      this.players.push(new Player(uuid, socket, name, 0));
+    } else {
+      existingPlayer.socket = socket;
+    }
     const frontendPlayers = this.frontendPlayers();
     socket.join(this.id);
     this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);

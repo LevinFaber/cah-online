@@ -1,6 +1,8 @@
 <template>
-  <v-app>
-    <title-bar title="" 
+  <v-app :dark="darkMode">
+    <title-bar 
+
+    title="" 
     :roomName="roomName" 
     :roomPw="roomPw" 
     :userName="userName"></title-bar>
@@ -22,37 +24,60 @@
 </template>
 
 <script>
-import TitleBar from './components/TitleBar'
-import Control from './components/Control'
-import Game from './components/Game'
+import TitleBar from "./components/TitleBar";
+import Control from "./components/Control";
+import Game from "./components/Game";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    TitleBar, Control, Game
+    TitleBar,
+    Control,
+    Game
   },
-  data () {
+  data() {
     return {
       title: "cards.levin.pw",
       isConnected: false,
-      userName: '',
-      roomName: '',
-      roomPw: '',
-      uuid: this.generateUUID()
-    }
+      userName: "",
+      roomName: "",
+      roomPw: "",
+      darkMode: false,
+      uuid: this.getUUID()
+    };
   },
   methods: {
-    generateUUID: () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16))
+    getUUID() {
+      let cookies = document.cookie;
+      let regex = new RegExp(".*;?uuid=(.*)");
+      let uuid = cookies.match(regex)[1];
+      if (typeof uuid !== "string") {
+        uuid = this.generateUUID();
+        document.cookie = `uuid=${uuid}`;
+      }
+      console.log(uuid);
+      return uuid;
+    },
+    generateUUID: () =>
+      ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+        (
+          c ^
+          (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+        ).toString(16)
+      )
   },
   sockets: {
     connect() {
-      console.log("%c Successesfully established Websocket Connection!!", "color: green");
+      console.log(
+        "%c Successesfully established Websocket Connection!!",
+        "color: green"
+      );
     },
     error_msg(data) {
       console.error(data.message);
     },
     chat(data) {
-      console.log(`Chat from ${data.from}: "${data.message}"`)
+      console.log(`Chat from ${data.from}: "${data.message}"`);
     },
     confirmJoin(data) {
       this.$data.isConnected = true;
@@ -61,7 +86,7 @@ export default {
       this.$data.userName = data.userName;
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
