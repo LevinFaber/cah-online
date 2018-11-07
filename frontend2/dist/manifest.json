@@ -1,6 +1,6 @@
 {
-  "name": "frontend2",
-  "short_name": "frontend2",
+  "name": "cah-online-frontend",
+  "short_name": "cah-online-frontend",
   "icons": [
     {
       "src": "./img/icons/android-chrome-192x192.png",
