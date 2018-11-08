@@ -10,7 +10,7 @@
       </v-card-title>
         <v-layout
           row>
-          <v-flex xs12 m4 :key="result.uuid" v-for="(result, index) in dialogData.data">
+          <v-flex xs12 md4 :key="result.uuid" v-for="(result, index) in dialogData.data">
             <v-card v-bind:color="color(index)" height="100%">
               <v-layout
                 column

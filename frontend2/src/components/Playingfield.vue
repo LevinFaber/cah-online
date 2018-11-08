@@ -5,6 +5,11 @@
       row
       wrap
     >
+    <v-flex xs12>
+      <v-layout
+        row
+        wrap
+      >
       <v-flex xs6 m2 class="black-card">
         <v-card
         color="black"
@@ -39,6 +44,8 @@
               </v-btn>
           </v-card>
       </v-flex>
+      </v-layout>
+    </v-flex>
       <v-flex xs12>
         <v-layout 
           row
@@ -218,11 +225,11 @@ export default {
 <style lang="scss" scoped>
 .flex {
   padding: 8px;
-  &.black-card {
+ /*  &.black-card {
     padding-left: 16px;
     padding-right: 4px;
     margin-right: 4px;
-  }
+  } */
 }
 .layout.yourCards {
   height: 100%;

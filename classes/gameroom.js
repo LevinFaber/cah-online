@@ -54,6 +54,7 @@ module.exports = class GameRoom {
   startRound(next) {
     if (this.currentRound !== 0 && !next) return;
     // Choose Czar
+    console.log(this.currentCzar);
     this.players[this.currentCzar].isCzar = true;
     this.currentCzar = this.currentCzar + 1;
     if (this.currentCzar > this.players.length) {

@@ -50,7 +50,12 @@ export default {
     getUUID() {
       let cookies = document.cookie;
       let regex = new RegExp(".*;?uuid=(.*)");
-      let uuid = cookies.match(regex)[1];
+      let uuid;
+      if ( cookies.match(regex) !== null) {
+        uuid = cookies.match(regex)[1];
+      }  else {
+        uuid = 1; //I know this is terrible 😀
+      }
       if (typeof uuid !== "string") {
         uuid = this.generateUUID();
         document.cookie = `uuid=${uuid}`;
