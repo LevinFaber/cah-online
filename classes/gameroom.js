@@ -59,7 +59,7 @@ module.exports = class GameRoom {
     if (this.currentCzar > this.players.length) {
       this.currentCzar = 0;
     }
-    this.frontendPlayers = this.frontendPlayers();
+    const frontendPlayers = this.frontendPlayers();
     this.io.to(this.id).emit('allPlayers', [...frontendPlayers]);
     console.log(`Starting round ${this.currentRound}`);
     this.running = true;
@@ -113,9 +113,7 @@ module.exports = class GameRoom {
         this.rounds[this.currentRound].blackCard.pick
       );
       this.rounds[this.currentRound][uuid] = {};
-      this.rounds[this.currentRound][uuid].answer = this.getPlayer(
-        uuid
-      ).playCards(textArray);
+      this.rounds[this.currentRound][uuid].answer = this.getPlayer(uuid).playCards(textArray);
     }
     if (this.allPlayed()) {
       console.log('Everybody played, ', this.rounds);
@@ -180,10 +178,14 @@ module.exports = class GameRoom {
       this.startRound(true);
     } else {
       // Clear State
-      // TODO Declare winner
-      this.io.to(this.id).emit('gameEnd', frontendPlayers);
+      this.io.to(this.id).emit('gameEnd', { ...frontendPlayers, newGame: true});
       this.running = false;
       this.rounds = {};
+      this.whiteCards = whiteCards;
+      this.blackCards = blackCards;
+      for (let player in this.players) {
+        player.points = 0;
+      }
     }
   }
   /**
@@ -222,7 +224,7 @@ module.exports = class GameRoom {
       else return true;
     });
   }
-  frontendPlayers() {
+  frontendPlayers(newGame) {
     const frontendPlayers = this.players.map((player) => {
       return {
         name: player.name,

@@ -1,7 +1,6 @@
 <template>
   <v-dialog
     v-model="dialogData.show"
-    max-width="50%"
   >
     <v-card>
       <v-card-title>
@@ -11,7 +10,7 @@
       </v-card-title>
         <v-layout
           row>
-          <v-flex xs4 :key="result.uuid" v-for="(result, index) in dialogData.data">
+          <v-flex xs12 m4 :key="result.uuid" v-for="(result, index) in dialogData.data">
             <v-card v-bind:color="color(index)" height="100%">
               <v-layout
                 column
@@ -30,6 +29,7 @@
           </v-flex>
         </v-layout>
       <v-card-actions>
+        <v-card-text v-if="dialogData.newGame">New Game?</v-card-text>
         <v-spacer></v-spacer>
         <v-btn
           outline

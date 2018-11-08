@@ -5,7 +5,7 @@
       row
       wrap
     >
-      <v-flex xs2 class="black-card">
+      <v-flex xs6 m2 class="black-card">
         <v-card
         color="black"
         class="white--text"
@@ -14,18 +14,18 @@
         <div class="headline">{{ blackCard.text }}</div>
         </v-card-title>
         <v-card-text>
-        <span class="text-xs-right">{{ blackCard.pick }}</span>
+        <span class="text-m-right">{{ blackCard.pick }}</span>
         </v-card-text>
         </v-card>
       </v-flex>
-      <v-flex v-if="yourPlayedCards.length > 0" xs2>
+      <v-flex v-if="yourPlayedCards.length > 0" xs6 m2>
           <v-card color="pink" height="220px"> 
               <v-card-text :key="card" v-for="card in yourPlayedCards">
                 <div :class="{headline: yourPlayedCards.length<2}">{{card}}</div>
               </v-card-text>
           </v-card>
       </v-flex>
-      <v-flex :key="card.uuid" v-for="card in allPlayedCards" xs2>
+      <v-flex :key="card.uuid" v-for="card in allPlayedCards" xs6 m2>
           <v-card height="220px"> 
               <v-card-text :key="answer.toString()" v-for="answer in card.answer">
                 <div :class="{headline: card.answer.length<2}">{{answer}}</div>
@@ -44,7 +44,7 @@
           row
           wrap
         >
-          <v-flex column xs2 v-for="card in yourCards" :key="card">
+          <v-flex column xs6 m2 v-for="card in yourCards" :key="card">
             <v-card 
               height="220px"
               > 

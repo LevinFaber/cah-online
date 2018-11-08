@@ -4,20 +4,20 @@
     wrap
     id="game"
   >
-    <v-flex xs8>
+    <v-flex m8>
       <playingfield :game="game"></playingfield>
     </v-flex>
-    <v-flex xs4>
+    <v-flex m4>
       <v-layout
         column
         fill-height="true"
       >
-        <v-flex xs12 fill-height="true">
+        <v-flex m12 fill-height="true">
           <v-card>
             <playerlist></playerlist>
           </v-card>
         </v-flex>
-          <v-flex xs12 fill-height="true">
+          <v-flex m12 fill-height="true">
             //TODO Chat
             <chat></chat>
             <v-card>
